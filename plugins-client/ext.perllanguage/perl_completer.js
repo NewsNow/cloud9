@@ -8,7 +8,7 @@ define(function(require, exports, module) {
 
 var completeUtil = require("ext/codecomplete/complete_util");
 var baseLanguageHandler = require('ext/language/base_handler');
-// var perlSnippets = require("ext/perllanguage/snippets");
+var perlSnippets = require("ext/perllanguage/snippets");
 
 var completer = module.exports = Object.create(baseLanguageHandler);
 
@@ -16,14 +16,57 @@ completer.handlesLanguage = function(language) {
    return language === "perl";
 };
       
-// use doc.getLine(<row>) to read a line from the current document
-// pos = { row: <row>, column: <col> }
+var JADE_REGEX = /.*?([a-zA-Z]*)([.#])([\w]+)/;
+var JADE_ID_REGEX = /[a-zA-Z_0-9\$\_.#]/;
+
 completer.complete = function(doc, fullAst, pos, currentNode, callback) {
-   var line = doc.getLine(pos.row);
+    var line = doc.getLine(pos.row);
+    
    console.log('autocomplete-perl', pos, line);
    // callback([{name: 'xxx', replaceText: 'zzz', value: 'yyy', score: 100, meta: "rhyme", doc: '<pre>Hello</pre>'}]);
    // callback([{name: line+'xxx', replaceText: line+'zzz', score: 100, meta: "rhyme", doc: '<pre>Hello</pre>'}]);
-   callback([{name: line, replaceText: line, score: 100, meta: "rhyme", doc: '<pre>Hello</pre>'}]);
+   //callback([{name: line, replaceText: line, score: 100, meta: "rhyme", doc: '<pre>Hello</pre>'}]);
+   //return;
+    
+    var match = JADE_REGEX.exec(line.substring(0, pos.column));
+    if(match) {
+        var replaceText;
+        var snippet = perlSnippets[match[1]];
+        if (snippet) {
+            replaceText = snippet.replace("<" + match[1] + ">",
+                ["<", match[1], match[2] === "." ? " class=\"" : " id=\"",
+                    match[3], "\">"].join(""));
+        }
+        else {
+            replaceText = ["<", match[1] || "div",
+                match[2] === "." ? " class=\"" : " id=\"", match[3],
+                "\">^^", "</", match[1] || "div", ">"].join("");
+        }
+        callback([{
+              name            : match[1]+match[2]+match[3],
+              replaceText     : replaceText,
+              doc             : "<pre>" + replaceText.replace("\^\^", "&#9251;") + "</pre>",
+              icon            : null,
+              meta            : "Jade-Haml",
+              identifierRegex : JADE_ID_REGEX,
+              priority        : 100
+        }]);
+    }
+    else {
+        var identifier = completeUtil.retrievePrecedingIdentifier(line, pos.column);
+        var allIdentifiers = Object.keys(perlSnippets);
+        var matches = completeUtil.findCompletions(identifier, allIdentifiers);
+        callback(matches.map(function(m) {
+            return {
+              name        : m,
+              replaceText : perlSnippets[m],
+              doc         : "<pre>" + perlSnippets[m].replace("\^\^", "&#9251;") + "</pre>",
+              icon        : null,
+              meta        : "snippet",
+              priority    : 2
+            };
+        }));
+    }
 };
 
 });
