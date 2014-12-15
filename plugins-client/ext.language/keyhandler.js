@@ -50,7 +50,7 @@ function onCommandKey(e) {
 function typeAlongComplete(e) {
     if (e.metaKey || e.altKey || e.ctrlKey)
         return false;
-    if (!isJavaScript())
+    if (!isTypeAlongCompleteLanguage())
         return false;
     if (e.keyCode === 8) { // Backspace
         var complete = require("ext/language/complete");
@@ -80,8 +80,9 @@ function typeAlongCompleteTextInput(text, pasted) {
     handleChar(text, idRegex, completionRegex);
 }
 
-function isJavaScript() {
-    return editors.currentEditor.amlEditor.syntax === "javascript";
+function isTypeAlongCompleteLanguage() {
+    return editors.currentEditor.amlEditor.syntax === "javascript" || 
+        editors.currentEditor.amlEditor.syntax === "perl";
 }
 
 function inTextToken(editor, pos) {
