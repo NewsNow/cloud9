@@ -140,6 +140,7 @@ var config = [
             "ext/jslanguage/jslanguage",
             "ext/csslanguage/csslanguage",
             "ext/htmllanguage/htmllanguage",
+            "ext/perllanguage/perllanguage",
             "ext/autotest/autotest",
             "ext/closeconfirmation/closeconfirmation",
             "ext/codetools/codetools",
